@@ -146,3 +146,76 @@ Jason.decode(string)
 
 > [!NOTE]
 > You might be wondering why you might use `ok_then` / `error_then` functions instead of `with`.  If so, check out the [Comparison to with](comparison-to-with.html) section.
+
+## `tap_ok` and `tap_error`
+
+The `Triage.tap_ok/2` and `Triage.tap_error/2` functions allow you to perform side effects (like logging, notifications, or analytics) without changing the result. Unlike `ok_then` and `error_then`, these functions always pass the original result through unchanged, making them ideal for observation and monitoring.
+
+### `tap_ok/2` - Side effects on success
+
+Executes a function only for successful results, passing through the original result unchanged:
+
+```elixir
+# Example: Track analytics and send notifications for user registrations
+register_user(params)
+|> Triage.tap_ok(fn user ->
+  Analytics.track("user_registered", %{user_id: user.id})
+  NotificationService.send_welcome_email(user)
+end)
+|> Triage.ok_then(&add_to_default_groups/1)
+# => {:ok, user} - the tap doesn't affect the result
+
+# Example: Caching successful API responses
+fetch_product_from_api(product_id)
+|> Triage.tap_ok(& Cache.put("product:#{product_id}", &1))
+|> Triage.ok_then(&transform_product/1)
+# The cache is populated but the result continues through the pipeline
+```
+
+When given `:ok`, the function receives `nil`:
+
+```elixir
+delete_user(user_id)
+# Returns :ok on success
+|> Triage.tap_ok(fn nil ->
+  AuditLog.record_deletion(:user, user_id)
+end)
+# => :ok
+```
+
+### `tap_error/2` - Side effects on failure
+
+Executes a function only for error results, passing through the original error unchanged:
+
+```elixir
+# Example: Error monitoring and alerting
+process_payment(order)
+|> Triage.tap_error(fn error ->
+  ErrorTracker.report(error, context: %{order_id: order.id})
+
+  if error == :payment_gateway_down do
+    PagerDuty.alert("Payment gateway is down")
+  end
+end)
+|> Triage.error_then(&handle_payment_error/1)
+# => {:error, reason} - the tap doesn't change the error
+
+# Example: Track metrics for failed operations
+update_inventory(product_id, quantity)
+|> Triage.tap_error(fn reason ->
+  Metrics.increment("inventory.update.failed", tags: %{reason: reason})
+  ErrorTracker.report(reason, context: %{product_id: product_id})
+end)
+# => {:error, reason}
+```
+
+When given `:error`, the function receives `nil`:
+
+```elixir
+validate_required_fields(params)
+# Returns :error when validation fails with no specific reason
+|> Triage.tap_error(fn nil ->
+  Metrics.increment("validation.failed.no_reason")
+end)
+# => :error
+```
