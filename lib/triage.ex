@@ -293,6 +293,102 @@ defmodule Triage do
 
   @doc group: "Functions > Control Flow"
   @doc """
+  Executes a side-effect function when the result is :ok, passing the result through unchanged.
+
+  Takes a result and, if it's `:ok` or `{:ok, value}`, calls the provided function with
+  the unwrapped value (or `nil` for `:ok`). The result is always returned unchanged,
+  making this useful for side effects like logging or debugging.
+
+  If the result is an error, the function is not called and the error is returned unchanged.
+
+  ## Examples
+
+      # Track analytics for successful user registrations
+      iex> register_user(params)
+      ...> |> tap_ok(fn user -> Analytics.track("user_registered", %{user_id: user.id}) end)
+      {:ok, %User{email: "user@example.com"}}
+
+      # Cache API responses while continuing the pipeline
+      iex> fetch_product_from_api(product_id)
+      ...> |> tap_ok(fn product -> Cache.put("product:\#{product_id}", product) end)
+      {:ok, %Product{id: 123, name: "Widget"}}
+
+      # Errors pass through without calling the function
+      iex> tap_ok({:error, :not_found}, fn user -> send_notification(user) end)
+      {:error, :not_found}
+  """
+  @spec tap_ok(result(), (any() -> any())) :: result()
+  def tap_ok(result, func) do
+    Validate.validate_result!(result, :strict)
+
+    case result do
+      :ok ->
+        func.(nil)
+
+      {:ok, value} ->
+        func.(value)
+
+      _ ->
+        # Ignored
+        nil
+    end
+
+    result
+  end
+
+  @doc group: "Functions > Control Flow"
+  @doc """
+  Executes a side-effect function when the result is an error, passing the result through unchanged.
+
+  Takes a result and, if it's `:error` or `{:error, reason}`, calls the provided function
+  with the unwrapped reason (or `nil` for `:error`). The result is always returned unchanged,
+  making this useful for side effects like logging or debugging errors.
+
+  If the result is :ok, the function is not called and the :ok result is returned unchanged.
+
+  ## Examples
+
+      # Monitor payment failures and send alerts
+      iex> process_payment(order)
+      ...> |> tap_error(fn reason ->
+      ...>   ErrorTracker.report(reason, context: %{order_id: order.id})
+      ...>   if reason == :payment_gateway_down, do: PagerDuty.alert("Gateway down")
+      ...> end)
+      {:error, :payment_gateway_down}
+
+      # Track metrics for failed operations
+      iex> update_inventory(product_id, quantity)
+      ...> |> tap_error(fn reason ->
+      ...>   ErrorTracker.report(reason, context: %{product_id: product_id})
+      ...>   Metrics.increment("inventory.update.failed", tags: %{reason: reason})
+      ...> end)
+      {:error, :insufficient_stock}
+
+      # Success results pass through without calling the function
+      iex> tap_error({:ok, user}, fn _ -> ErrorTracker.report("Won't be called") end)
+      {:ok, %User{}}
+  """
+  @spec tap_error(result(), (any() -> any())) :: result()
+  def tap_error(result, func) do
+    Validate.validate_result!(result, :strict)
+
+    case result do
+      :error ->
+        func.(nil)
+
+      {:error, reason} ->
+        func.(reason)
+
+      _ ->
+        # Ignored
+        nil
+    end
+
+    result
+  end
+
+  @doc group: "Functions > Control Flow"
+  @doc """
   For dealing with `:error` cases, passing `:ok` results through unchanged.
 
   When given result is `{:error, reason}`, the `reason` is passed into the callback
