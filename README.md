@@ -136,7 +136,8 @@ For more functions and examples, see the [Enumerating Errors section of the docs
 `triage`'s two control flow tools (`ok_then` and `error_then`) can both be shown via an HTTP request example:
 
 ```elixir
-HTTPoison.get(url)
+fetch_bill(bill_id)
+|> Triage.ok_then(& HTTPoison.get(&1.pdf_url))
 |> Triage.ok_then(fn
   %HTTPoison.Response{status_code: 200, body: body} ->
     body
