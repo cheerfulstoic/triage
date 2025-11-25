@@ -29,6 +29,14 @@ defmodule Triage.RunTest do
     test "Returns error with value as error" do
       assert Triage.run!(fn -> {:error, "Test error"} end) == {:error, "Test error"}
     end
+
+    test "Supports 3+ values :ok tuples returns from function" do
+      assert Triage.run!(fn -> {:ok, :foo, :bar} end) == {:ok, :foo, :bar}
+    end
+
+    test "Supports 3+ values :error tuples returns from function" do
+      assert Triage.run!(fn -> {:error, :foo, :bar} end) == {:error, :foo, :bar}
+    end
   end
 
   describe "run/1" do
@@ -62,6 +70,14 @@ defmodule Triage.RunTest do
                ~r<\*\* \(RuntimeError\) boom\n    \[CONTEXT\] test/triage/run_test\.exs:\d+: Triage\.RunTest\.-test run/1 An exception is raised/1-fun-0-/1>
 
       assert wrapped_error.result == %RuntimeError{message: "boom"}
+    end
+
+    test "Supports 3+ values :ok tuples returns from function" do
+      assert Triage.run(fn -> {:ok, :foo, :bar} end) == {:ok, :foo, :bar}
+    end
+
+    test "Supports 3+ values :error tuples returns from function" do
+      assert Triage.run(fn -> {:error, :foo, :bar} end) == {:error, :foo, :bar}
     end
   end
 

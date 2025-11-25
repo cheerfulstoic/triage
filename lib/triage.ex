@@ -212,18 +212,18 @@ defmodule Triage do
 
     result = func.(value)
 
-    cond do
-      result == :ok or match?({:ok, _}, result) ->
+    case result_type(result) do
+      :ok ->
         result
 
-      result == :error or match?({:error, _}, result) ->
+      :error ->
         if opts[:retries] == 0 do
           result
         else
           ok_then!({:ok, value}, func, Keyword.update!(opts, :retries, &(&1 - 1)))
         end
 
-      true ->
+      _ ->
         {:ok, result}
     end
   end
@@ -421,18 +421,21 @@ defmodule Triage do
   def error_then(:error, func), do: error_then({:error, nil}, func)
 
   def error_then({:error, reason}, func) do
-    case func.(reason) do
-      :ok ->
-        :ok
+    result = func.(reason)
 
-      {:ok, _} = result ->
+    case result_type(result) do
+      :ok ->
+        result
+
+      :error ->
         result
 
       nil ->
-        :error
-
-      other ->
-        {:error, other}
+        if result == nil do
+          :error
+        else
+          {:error, result}
+        end
     end
   end
 
@@ -821,4 +824,10 @@ defmodule Triage do
   def error?(:error), do: true
   def error?(result) when is_tuple(result), do: elem(result, 0) == :error
   def error?(result), do: Validate.validate_result!(result, :loose)
+
+  defp result_type(:ok), do: :ok
+  defp result_type(:error), do: :error
+  defp result_type(result) when is_tuple(result) and elem(result, 0) == :ok, do: :ok
+  defp result_type(result) when is_tuple(result) and elem(result, 0) == :error, do: :error
+  defp result_type(_), do: nil
 end

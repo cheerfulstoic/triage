@@ -96,6 +96,14 @@ defmodule Triage.OkThenTest do
 
       assert result == {:ok, 42}
     end
+
+    test "Supports 3+ values :ok tuples returns from function" do
+      assert Triage.ok_then!(:ok, fn _ -> {:ok, :foo, :bar} end) == {:ok, :foo, :bar}
+    end
+
+    test "Supports 3+ values :error tuples returns from function" do
+      assert Triage.ok_then!(:ok, fn _ -> {:error, :foo, :bar} end) == {:error, :foo, :bar}
+    end
   end
 
   describe "ok_then/2" do
@@ -178,6 +186,14 @@ defmodule Triage.OkThenTest do
 
       assert reason.__struct__ == CustomError
       assert reason.message == "custom error"
+    end
+
+    test "Supports 3+ values :ok tuples returns from function" do
+      assert Triage.ok_then(:ok, fn _ -> {:ok, :foo, :bar} end) == {:ok, :foo, :bar}
+    end
+
+    test "Supports 3+ values :error tuples returns from function" do
+      assert Triage.ok_then(:ok, fn _ -> {:error, :foo, :bar} end) == {:error, :foo, :bar}
     end
   end
 

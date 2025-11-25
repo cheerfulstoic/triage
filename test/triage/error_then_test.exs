@@ -81,5 +81,13 @@ defmodule Triage.ErrorThenTest do
       assert Triage.error_then({:error, :server_timed_out}, func) == {:ok, :default_value}
       assert Triage.error_then({:error, :whatever}, func) == :ok
     end
+
+    test "Supports 3+ values :ok tuples returns from function" do
+      assert Triage.error_then(:error, fn _ -> {:ok, :foo, :bar} end) == {:ok, :foo, :bar}
+    end
+
+    test "Supports 3+ values :error tuples returns from function" do
+      assert Triage.error_then(:error, fn _ -> {:error, :foo, :bar} end) == {:error, :foo, :bar}
+    end
   end
 end
