@@ -160,6 +160,8 @@ The `Triage.ok_then` function works on `:ok` results, ignoring errors.  Values t
 
 The `Triage.error_then` function is the opposite: working on `:error` reasons and returning new reasons to be wrapped in an `{:error, _}` tuple.  If an `:ok` or `{:ok, _}` result is returned, then the error is ignored and `Triage.error_then` will return that success.
 
+Additionally there are `tap_ok` and `tap_error` function which allow you to execute side-effects (see also Elixir's [`Kernel.then/2`](https://hexdocs.pm/elixir/Kernel.html#then/2) and [`Kernel.tap/2`](https://hexdocs.pm/elixir/Kernel.html#tap/2) functions which are analogous to the above).
+
 Make sure to see the [Control Flow section of the docs](https://hexdocs.pm/triage/control-flow.html) for more information.
 
 Also, many people wonder why they shouldn't just use `with` instead of `ok_then` / `error_then`.  There is a [section in the docs](https://hexdocs.pm/triage/comparison-to-with.html) for that too!
