@@ -128,7 +128,7 @@ defmodule Triage do
     opts = validate_run_opts!(opts)
 
     ok_then!(
-      {:ok, :test},
+      {:ok, nil},
       fn _ -> func.() end,
       opts
     )
