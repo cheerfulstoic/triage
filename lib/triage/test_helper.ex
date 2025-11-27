@@ -5,8 +5,8 @@ defmodule Triage.TestHelper do
   # module in the stacktrace which is part of the app configure via `config :errors, :app`
 
   @doc false
-  def run_log(result, mode) do
-    new_result = Triage.log(result, mode)
+  def run_log(result, opts) do
+    new_result = Triage.log(result, opts)
 
     blah()
 

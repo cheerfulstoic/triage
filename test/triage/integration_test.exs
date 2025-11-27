@@ -197,7 +197,7 @@ defmodule Triage.IntegrationTest do
     test "logs successes with :all mode" do
       log =
         capture_log([level: :info], fn ->
-          result = {:ok, 42} |> Triage.log(:all)
+          result = {:ok, 42} |> Triage.log(mode: :all)
           assert result == {:ok, 42}
         end)
 

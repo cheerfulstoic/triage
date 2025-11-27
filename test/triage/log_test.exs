@@ -38,9 +38,9 @@ defmodule Triage.LogTest do
   describe "validation" do
     test "mode must be :errors or :all" do
       assert_raise ArgumentError,
-                   "mode must be either :errors or :all (got: :something_else)",
+                   ~r/invalid value for :mode option: expected one of \[:errors, :all\], got: :something_else/,
                    fn ->
-                     Triage.log(:ok, :something_else)
+                     Triage.log(:ok, mode: :something_else)
                    end
     end
   end
@@ -233,14 +233,14 @@ defmodule Triage.LogTest do
       assert_raise ArgumentError,
                    "Argument must be {:ok, ...} / :ok / {:error, ...} / :error, got: 123",
                    fn ->
-                     123 |> Triage.log(:all)
+                     123 |> Triage.log(mode: :all)
                    end
     end
 
     test "logs :error atom" do
       log =
         capture_log([level: :info], fn ->
-          result = :error |> Triage.log(:all)
+          result = :error |> Triage.log(mode: :all)
           assert result == :error
         end)
 
@@ -250,7 +250,7 @@ defmodule Triage.LogTest do
     test "logs {:error, binary}" do
       log =
         capture_log([level: :info], fn ->
-          result = {:error, "something went wrong"} |> Triage.log(:all)
+          result = {:error, "something went wrong"} |> Triage.log(mode: :all)
           assert result == {:error, "something went wrong"}
         end)
 
@@ -265,7 +265,7 @@ defmodule Triage.LogTest do
             %User{}
             |> Ecto.Changeset.cast(%{name: 1}, [:name])
             |> Ecto.Changeset.apply_action(:insert)
-            |> Triage.log(:all)
+            |> Triage.log(mode: :all)
 
           assert {:error,
                   %Ecto.Changeset{
@@ -284,7 +284,7 @@ defmodule Triage.LogTest do
       log =
         capture_log([level: :info], fn ->
           {:error, %CustomStruct{id: 123, foo: "thing", user_id: 456, bar: "other"}}
-          |> Triage.log(:all)
+          |> Triage.log(mode: :all)
         end)
 
       # Uses Ecto's `inspect` implementation
@@ -302,7 +302,7 @@ defmodule Triage.LogTest do
              user_id: 456,
              bar: %OtherCustomStruct{id: 789, name: "Cool", something: "hi", fooID: 000}
            }}
-          |> Triage.log(:all)
+          |> Triage.log(mode: :all)
         end)
 
       # Uses Ecto's `inspect` implementation
@@ -313,7 +313,7 @@ defmodule Triage.LogTest do
     test "logs :ok atom" do
       log =
         capture_log([level: :info], fn ->
-          result = :ok |> Triage.log(:all)
+          result = :ok |> Triage.log(mode: :all)
           assert result == :ok
         end)
 
@@ -323,7 +323,7 @@ defmodule Triage.LogTest do
     test "logs {:ok, value}" do
       log =
         capture_log([level: :info], fn ->
-          result = {:ok, "success"} |> Triage.log(:all)
+          result = {:ok, "success"} |> Triage.log(mode: :all)
           assert result == {:ok, "success"}
         end)
 
@@ -333,7 +333,7 @@ defmodule Triage.LogTest do
     test "logs {:ok, value, value}" do
       log =
         capture_log([level: :info], fn ->
-          result = {:ok, "success", :foo} |> Triage.log(:all)
+          result = {:ok, "success", :foo} |> Triage.log(mode: :all)
           assert result == {:ok, "success", :foo}
         end)
 
@@ -350,7 +350,7 @@ defmodule Triage.LogTest do
              user_id: 456,
              bar: %OtherCustomStruct{id: 789, name: "Cool", something: "hi", fooID: 000}
            }}
-          |> Triage.log(:all)
+          |> Triage.log(mode: :all)
         end)
 
       # Uses Ecto's `inspect` implementation
@@ -366,7 +366,7 @@ defmodule Triage.LogTest do
 
       log =
         capture_log([level: :error], fn ->
-          {:error, "test"} |> Triage.TestHelper.run_log(:errors)
+          {:error, "test"} |> Triage.TestHelper.run_log(mode: :errors)
         end)
 
       assert log =~ ~r<\[RESULT\] lib/triage/test_helper\.ex:\d+: {:error, "test"}>
@@ -374,7 +374,7 @@ defmodule Triage.LogTest do
       # Should not appear at warning level
       log =
         capture_log([level: :critical], fn ->
-          {:error, "test"} |> Triage.TestHelper.run_log(:errors)
+          {:error, "test"} |> Triage.TestHelper.run_log(mode: :errors)
         end)
 
       refute log =~ ~r<RESULT>
@@ -395,7 +395,7 @@ defmodule Triage.LogTest do
 
       log =
         capture_log([level: :error], fn ->
-          :error |> Triage.TestHelper.run_log(:errors)
+          :error |> Triage.TestHelper.run_log(mode: :errors)
         end)
 
       assert log =~ ~r<\[RESULT\] lib/triage/test_helper\.ex:\d+: :error>
@@ -403,7 +403,7 @@ defmodule Triage.LogTest do
       # Should not appear at warning level
       log =
         capture_log([level: :critical], fn ->
-          :error |> Triage.TestHelper.run_log(:errors)
+          :error |> Triage.TestHelper.run_log(mode: :errors)
         end)
 
       refute log =~ "RESULT"
@@ -426,7 +426,7 @@ defmodule Triage.LogTest do
 
       log =
         capture_log([level: :info], fn ->
-          {:ok, "test"} |> Triage.TestHelper.run_log(:all)
+          {:ok, "test"} |> Triage.TestHelper.run_log(mode: :all)
         end)
 
       assert log =~ ~r<\[RESULT\] lib/triage/test_helper\.ex:9: {:ok, "test"}>
@@ -434,7 +434,7 @@ defmodule Triage.LogTest do
       # Should not appear at warning level
       log =
         capture_log([level: :notice], fn ->
-          {:ok, "test"} |> Triage.TestHelper.run_log(:all)
+          {:ok, "test"} |> Triage.TestHelper.run_log(mode: :all)
         end)
 
       refute log =~ ~r<RESULT>
@@ -443,7 +443,7 @@ defmodule Triage.LogTest do
     test "{:ok, _} logs at level: :info - shows best default line if app not configured " do
       log =
         capture_log([level: :info], fn ->
-          {:ok, "test"} |> Triage.log(:all)
+          {:ok, "test"} |> Triage.log(mode: :all)
         end)
 
       # With no app configured, it defaults to the first level up
@@ -455,7 +455,7 @@ defmodule Triage.LogTest do
 
       log =
         capture_log([level: :info], fn ->
-          :ok |> Triage.TestHelper.run_log(:all)
+          :ok |> Triage.TestHelper.run_log(mode: :all)
         end)
 
       assert log =~ ~r<\[RESULT\] lib/triage/test_helper\.ex:9: :ok>
@@ -463,7 +463,7 @@ defmodule Triage.LogTest do
       # Should not appear at warning level
       log =
         capture_log([level: :notice], fn ->
-          :ok |> Triage.TestHelper.run_log(:all)
+          :ok |> Triage.TestHelper.run_log(mode: :all)
         end)
 
       refute log =~ "RESULT"
@@ -474,7 +474,7 @@ defmodule Triage.LogTest do
 
       log =
         capture_log([level: :info], fn ->
-          :ok |> Triage.log(:all)
+          :ok |> Triage.log(mode: :all)
         end)
 
       assert log =~ ~r<\[RESULT\] :ok>

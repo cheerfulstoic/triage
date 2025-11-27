@@ -276,18 +276,21 @@ defmodule Triage do
   end
 
   defp validate_ok_then_opts!(opts) do
-    NimbleOptions.validate(opts,
+    validate_nimble_options!(opts,
       retries: [
         type: :non_neg_integer,
         default: 0
       ]
     )
-    |> case do
-      {:error, %NimbleOptions.ValidationError{} = error} ->
-        raise ArgumentError, Exception.message(error)
+  end
 
+  defp validate_nimble_options!(opts, schema) do
+    case NimbleOptions.validate(opts, schema) do
       {:ok, opts} ->
         opts
+
+      {:error, %NimbleOptions.ValidationError{} = error} ->
+        raise ArgumentError, Exception.message(error)
     end
   end
 
@@ -715,7 +718,9 @@ defmodule Triage do
 
   Takes a result and logs it. By default, only errors are logged.
 
-  The `mode` argument can be either `:errors` (the default) or `:all` (logs all results)
+  ## Options
+
+   * `:mode` - Either `:errors` (the default) or `:all` (logs all results)
 
   See [this guide](logging-json.html) for information about
   logging with JSON
@@ -727,18 +732,23 @@ defmodule Triage do
    * `{:ok, ...}` / `{:error, ...}` (any sized tuple starting with :ok or :error)
   """
   @spec log(result() | tuple()) :: result() | tuple()
-  def log(result, mode \\ :errors) do
+  @spec log(result() | tuple(), keyword()) :: result() | tuple()
+  def log(result, opts \\ []) do
     Validate.validate_result!(result, :loose)
 
-    if mode not in [:errors, :all] do
-      raise ArgumentError, "mode must be either :errors or :all (got: #{inspect(mode)})"
-    end
+    opts =
+      validate_nimble_options!(opts,
+        mode: [
+          type: {:in, [:errors, :all]},
+          default: :errors
+        ]
+      )
 
     stacktrace = Stacktrace.calling_stacktrace()
 
     {message, result_details} = Map.pop(Results.details(result), :message)
 
-    if result_details.type in ~w[error raise] || mode == :all do
+    if result_details.type in ~w[error raise] || opts[:mode] == :all do
       level = if(result_details.type in ~w[error raise], do: :error, else: :info)
 
       stacktrace_line =

@@ -12,8 +12,8 @@ defmodule API.UserController do
     Users.create_user(params)
     # Only logs if there's an error
     |> Triage.log()
-    # You can also pass :errors (the default)
-    # |> Triage.log(:errors)
+    # You can also pass mode: :errors (the default)
+    # |> Triage.log(mode: :errors)
     |> case do
       {:ok, user} ->
         conn
@@ -34,9 +34,9 @@ When `Users.create_user` returns an error, a log is written at the `error` log l
 # [error] [RESULT] lib/api/user_controller.ex:4: {:error, #Ecto.Changeset<...>}
 ```
 
-### Logging All Results (`:all` mode)
+### Logging All Results (`mode: :all`)
 
-In the case above, instead of calling `|> log(:errors)`  we could call `|> log(:all)`. In that case we could get the error log above, or we could get a success result written to the log at the `info` level:
+In the case above, instead of calling `|> log(mode: :errors)`  we could call `|> log(mode: :all)`. In that case we could get the error log above, or we could get a success result written to the log at the `info` level:
 
 ```
 # [info] [RESULT] lib/api/user_controller.ex:4: {:ok, %MyApp.Users.User{...}}

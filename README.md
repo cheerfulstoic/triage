@@ -65,7 +65,7 @@ def show(conn, %{"order_id" => order_id}) do
   # ...
 ```
 
-By default `Triage.log` will only output error cases (pass in `:all` to log `:ok` results as well), so if this case is important we can have a log of how it went wrong. Also note that any metadata given to `log` is also assigned to the [Logger metadata](https://hexdocs.pm/logger/Logger.html#module-metadata) in addition to being outputted (helpful for filtering logs).
+By default `Triage.log` will only output error cases (pass in `mode: :all` to log `:ok` results as well), so if this case is important we can have a log of how it went wrong. Also note that any metadata given to `log` is also assigned to the [Logger metadata](https://hexdocs.pm/logger/Logger.html#module-metadata) in addition to being outputted (helpful for filtering logs).
 
 The output can be as simple as this in the case of an atom given as the error reason:
 
