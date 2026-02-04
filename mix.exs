@@ -6,7 +6,7 @@ defmodule Triage.MixProject do
   def project do
     [
       app: :triage,
-      version: "0.7.1",
+      version: "0.7.2",
       elixir: "~> 1.15",
       description: "Making dealing with results (ok/error) easy",
       licenses: ["MIT"],
