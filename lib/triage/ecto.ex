@@ -24,7 +24,7 @@ defmodule Triage.Ecto do
         |> Enum.sort()
         |> Enum.join(", ")
 
-      if(field != :base, do: "#{field}: ", else: "") <> message_string
+      if(field in [:base, nil], do: "", else: "#{field}: ") <> message_string
     end)
   end
 

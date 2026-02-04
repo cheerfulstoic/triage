@@ -208,6 +208,19 @@ defmodule Triage.UserMessageTest do
                "either email or username must be unique"
     end
 
+    # Honestly I don't know if this is a thing or if it even should be a thing
+    # but `nil` is an atom, so it *can* be a thing, so we might as well support it
+    # properly if anybody ever does it (and because I did it in an app 😉)
+    test "nil field errors without field prefix" do
+      changeset =
+        {%{}, %{email: :string}}
+        |> Ecto.Changeset.cast(%{email: "test@example.com"}, [:email])
+        |> Ecto.Changeset.add_error(nil, "either email or username must be unique")
+
+      assert Triage.user_message({:error, changeset}) ==
+               "either email or username must be unique"
+    end
+
     test "empty changeset with no errors" do
       changeset =
         {%{}, %{email: :string}}
