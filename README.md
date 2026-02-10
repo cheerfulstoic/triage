@@ -1,3 +1,5 @@
+**IMPORTANT NOTE**: This library's API and documentation is very fleshed out. But much of this library is a work-in-progress conceptually. Please consider everything as potentially open to change!
+
 # Triage
 
 A lightweight Elixir library for enhanced handling of **results** (`{:ok, _}` / `:ok` / `{:error, _}` / `:error`) with context wrapping, logging, and user message generation.
