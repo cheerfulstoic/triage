@@ -85,6 +85,10 @@ defimpl Triage.JSON.Shrink, for: Any do
   def shrink(map) when is_map(map) do
     map
     |> Enum.map(fn
+      {key, value} when is_pid(key) -> {Kernel.inspect(key), value}
+      {key, value} -> {key, value}
+    end)
+    |> Enum.map(fn
       {key, value}
       when is_map(value) or is_list(value) or is_tuple(value) or is_function(value) ->
         {key, Triage.JSON.Shrink.shrink(value)}
@@ -103,6 +107,7 @@ defimpl Triage.JSON.Shrink, for: Any do
         true
 
       {key, value} ->
+        # !String.Chars.impl_for(key) or
         Regex.match?(~r/[a-z](_id|Id|ID)$/, to_string(key)) or
           (is_map(value) and map_size(value) > 0) or
           is_list(value)
@@ -135,6 +140,8 @@ defimpl Triage.JSON.Shrink, for: Any do
       {:error, _} -> inspect(string)
     end
   end
+
+  def shrink(pid) when is_pid(pid), do: Kernel.inspect(pid)
 
   def shrink(value), do: value
 

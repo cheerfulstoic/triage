@@ -139,6 +139,16 @@ defmodule Triage.JSONTest do
                roles: [:admin, :user]
              }
     end
+
+    test "map with PID keys" do
+      input = %{
+        self() => 123
+      }
+
+      result = shrink(input)
+
+      assert result == %{}
+    end
   end
 
   describe "shrink/1 with nested maps" do
